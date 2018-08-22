@@ -1,0 +1,101 @@
+<html>
+<head>
+    <title>Chat WebSocket</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/0.3.4/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script type="text/javascript">
+            var stompClient = null;
+
+            function setConnected(connected) {
+                document.getElementById('connect').disabled = connected;
+                document.getElementById('disconnect').disabled = !connected;
+                document.getElementById('conversationDiv').style.visibility
+                  = connected ? 'visible' : 'hidden';
+                document.getElementById('response').innerHTML = '';
+            }
+
+            function connect() {
+                var socket = new SockJS('/chat');
+                stompClient = Stomp.over(socket);
+
+                stompClient.connect({"Auth-User" : document.getElementById('from').value}, function(frame) {
+                    setConnected(true);
+                    console.log('Connected: ' + frame);
+                    stompClient.subscribe('/topic/messages', function(messageOutput) {
+                        showMessageOutput(JSON.parse(messageOutput.body), 'response');
+                    });
+                    stompClient.subscribe('/user/topic/messages', function(messageOutput) {
+                        showMessageOutput(JSON.parse(messageOutput.body), 'response-specific');
+                    });
+                });
+            }
+
+            function disconnect() {
+                if(stompClient != null) {
+                    stompClient.disconnect();
+                }
+                setConnected(false);
+                console.log("Disconnected");
+            }
+
+            function sendMessage() {
+                var from = document.getElementById('from').value;
+                var text = document.getElementById('text').value;
+                stompClient.send("/app/chat", {},
+                  JSON.stringify({'from':from, 'text':text}));
+            }
+
+            function sendDirect() {
+                var from = document.getElementById('from').value;
+                var to = document.getElementById('to').value;
+                var text = document.getElementById('to_text').value;
+                stompClient.send("/app/whisper."+to, {},
+                  JSON.stringify({'from':from, 'text':text}));
+            }
+
+            function showMessageOutput(messageOutput, idToAppendTo) {
+                var response = document.getElementById(idToAppendTo);
+                var p = document.createElement('p');
+                p.style.wordWrap = 'break-word';
+                p.appendChild(document.createTextNode(messageOutput.from + ": "
+                  + messageOutput.message + " (" + messageOutput.time + ")"));
+                response.prepend(p);
+            }
+        </script>
+</head>
+<body onload="disconnect()">
+<div class="container">
+    <div>
+        <input type="text" id="from" placeholder="Choose a nickname" class="form-control"/>
+    </div>
+    <br />
+    <div>
+        <button id="connect" onclick="connect();" class="btn btn-primary">Connect</button>
+        <button id="disconnect" disabled="disabled" onclick="disconnect();" class="btn btn-secondary">
+            Disconnect
+        </button>
+    </div>
+    <br />
+    <div id="conversationDiv" class="row">
+        <span class="col">
+            <input type="text" id="text" placeholder="Write a message..." class="form-control"/>
+            <br/>
+            <button id="sendMessage" onclick="sendMessage();" class="btn btn-primary">Send</button>
+            <br/>
+            <p id="response"></p>
+        </span>
+        <span class="col">
+            <input type="text" id="to" placeholder="To..." class="form-control"/>
+            <br/>
+            <input type="text" id="to_text" placeholder="Write a message..." class="form-control"/>
+            <br/>
+            <button id="sendMessageSpecific" onclick="sendDirect();" class="btn btn-primary">Send Specific</button>
+            <br/>
+            <p id="response-specific"></p>
+        </span>
+    </div>
+</div>
+
+</body>
+</html>
