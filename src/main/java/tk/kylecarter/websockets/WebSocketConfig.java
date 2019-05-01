@@ -25,8 +25,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chat");
-        registry.addEndpoint("/chat").withSockJS();
+        //registry.addEndpoint("/chat");
+        registry.addEndpoint("/chat").withSockJS().setWebSocketEnabled(false);
     }
 
     /**
@@ -36,17 +36,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setPathMatcher(new AntPathMatcher("."));
-        registry
-                .setApplicationDestinationPrefixes("/app")
-                .setUserDestinationPrefix("/user")
-                .enableStompBrokerRelay("/topic", "/response")
-                .setUserDestinationBroadcast("/topic/logbook-unresolved-user")
-                .setUserRegistryBroadcast("/topic/logbook-user-registry")
-                .setRelayHost("localhost")
-                .setRelayPort(61613)
-                .setSystemHeartbeatReceiveInterval(30000)
-                .setSystemHeartbeatSendInterval(30000);
+        //registry.setPathMatcher(new AntPathMatcher("."));
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.enableSimpleBroker("/topic", "/response");
+//        registry
+//                .setApplicationDestinationPrefixes("/app")
+//                .setUserDestinationPrefix("/user")
+//                .enableStompBrokerRelay("/topic", "/response")
+//                .setUserDestinationBroadcast("/topic/logbook-unresolved-user")
+//                .setUserRegistryBroadcast("/topic/logbook-user-registry")
+//                .setRelayHost("localhost")
+//                .setRelayPort(61613)
+//                .setSystemHeartbeatReceiveInterval(30000)
+//                .setSystemHeartbeatSendInterval(30000);
 
     }
 
